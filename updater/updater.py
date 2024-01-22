@@ -117,6 +117,7 @@ def readResPatchCatalog(t):
     return ret
 
 catalog = readResPatchCatalog(t)
+catalog['patch_base_url'] = patch_base_url
 catalog
 
 with open(f'catalogs/{cdnver}.json', 'w') as f:
@@ -126,8 +127,14 @@ with open(f'catalogs/{cdnver}.json', 'w') as f:
 indexs = list(set(sum((c['ResInfoIndexList'] for c in catalog['ResPkgInfoList']), [])))
 assert indexs[-1] == len(indexs) - 1
 
+import subprocess
+subprocess.check_call(['ln', '-sf', f'{cdnver}.json', 'latest.json'], cwd='catalogs')
+
 # for single resource: https://x3cn-client.papegames.com/prd/1.0.2536/respatch_ios/patch_res/Total/XFileZip/968647023.zip
 # for a package: https://x3cn-client.papegames.com/prd/1.0.2536/respatch_ios/patch_res/Packages/c-35.zip
-allfiles = [f'{patch_base_url}/{c["m_filePath"]}' for c in catalog['ResPkgInfoList']]
-with open('/tmp/update_packages.txt', 'w') as f:
-    f.write(json.dumps(allfiles))
+# allfiles = [f'{patch_base_url}/{c["m_filePath"]}' for c in catalog['ResPkgInfoList']]
+# with open('/tmp/update_info.json', 'w') as f:
+#     f.write(json.dumps({
+#         "all_files": allfiles,
+#         "ver": cdnver,
+#     }))

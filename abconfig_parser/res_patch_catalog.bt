@@ -1,0 +1,73 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+char magic[8];
+char hash[32];
+
+struct _Str {
+    uint16 len;
+    char str[len];
+};
+typedef struct _Str Str <read=StrRead>;
+
+string StrRead(Str &str) {
+    if (str.len == 0) return "";
+    return str.str;
+}
+
+struct UInt32Array {
+    uint16 len;
+    uint32 arr[len];
+};
+
+Str VersionString;
+uint32 VersionNum;
+float PackageCountPercentThreshold;
+float SmallPackageCountPercentThreshold;
+
+uint32 resinfoLength;
+
+struct _ResInfo {
+    Str m_filePath;
+    uint32 m_size;
+    uint32 m_hash;
+};
+typedef struct _ResInfo ResInfo <read=ResInfoRead>;
+string ResInfoRead(ResInfo &info) { return StrRead(info.m_filePath); }
+ResInfo resinfo[resinfoLength] <optimize=false>;
+
+uint32 resPkgInfoListLength;
+struct ResPkgInfoList {
+    uint32 TagIndex;
+    Str m_filePath;
+    uint32 m_size;
+    uint32 m_rawSize;
+    uint32 m_hash;
+    uint32 unkt4;
+    uint32 ResInfoIndexList[unkt4];
+    uint32 unkt6;
+    struct ResPackageVolumeInfo {
+        Str m_filePath;
+        uint32 m_size;
+        uint32 m_rawSize;
+        uint32 m_hash;
+    } ResPkgVolumeInfoList[unkt6] <optimize=false>;
+} resPkgInfoList[resPkgInfoListLength] <optimize=false>;
+
+uint32 CustomUserDataLen;
+uint32 modifiedNotificationResInfosLength;
+
+struct ModifiedNotificationResInfo {
+    int32 ResIndex;
+    Str UserData;
+} ModifiedNotificationResInfos[modifiedNotificationResInfosLength] <optimize=false>;

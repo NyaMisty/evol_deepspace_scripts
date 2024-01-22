@@ -1,0 +1,113 @@
+name: Evol Deepspace Updater
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+  repository_dispatch:
+  schedule:
+   - cron: "0 */4 * * *" # min hour day week year
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      ##########################################################
+      ###
+      ### XXX: Pre-init steps here
+      ###
+      ##########################################################
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Generate timestamp
+        id: timestamp # output: value
+        run: |
+          TIMESTAMP="$(date +"%Y%m%d")"
+          echo "Timestamp: ${TIMESTAMP}"
+          echo "::set-output name=value::${TIMESTAMP}"
+      - name: Get tag
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        id: tag # output: tag
+        uses: dawidd6/action-get-tag@v1
+      
+      ### XXX: Auto update submodule ref, enable this if needed
+      - name: Update submodules
+        run: |
+          git submodule update --init --recursive
+          git submodule update --remote      
+
+      ### SSH Git Private
+      - name: Setup SSH (key agent)
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: |
+            ${{ secrets.SSH_KEY1 }}
+            ${{ secrets.SSH_KEY2 }}
+            ${{ secrets.SSH_KEY3 }}
+      - name: Setup SSH (config & known-host)
+        run: |
+          mkdir -p $HOME/.ssh
+          # Setup needed known hosts
+          ssh-keyscan -H nas-school6.misty.moe >> $HOME/.ssh/known_hosts
+
+      - name: Setup committer
+        run: |
+          git config --global user.email "gh-worker@misty.moe"
+          git config --global user.name "NyaMisty BuildWorker"
+      
+
+      ### XXX: Keep alive cron-type workflows
+      - uses: gautamkrishnar/keepalive-workflow@master
+
+      ##########################################################
+      ###
+      ### XXX: Env-setup steps here
+      ###
+      ##########################################################
+      ### Python
+      ##
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+          architecture: x64
+          cache: 'pip'
+      - run: pip3 install requests
+
+      ##########################################################
+      ###
+      ### XXX: Main building steps here
+      ###
+      ##########################################################
+      - name: Pull remote
+        run: |
+          git clone ${{ secrets.UPDATE_REPO }} --depth=1 update_output
+          mkdir -p update_output/catalogs
+            
+      - name: Run updater
+        run: python3 ../updater/updater.py latest ios
+        working-directory: update_output
+        env:
+          PYTHONIOENCODING: "UTF-8"
+
+      - name: Save changes
+        run: |
+          git add .
+          git commit -m "AutoUpdate-${{steps.timestamp.outputs.value}}"
+          git push
+
+        
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+      

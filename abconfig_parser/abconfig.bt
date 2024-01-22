@@ -1,0 +1,55 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+struct Str {
+    uint16 len;
+    char str[len];
+};
+struct UInt32Array {
+    uint16 len;
+    uint32 arr[len];
+};
+
+uint16 version;
+byte UseHashName;
+byte SupportRemoteAsyncLoad;
+
+uint32 abinfoLen;
+struct XABInfo {
+    Str ABName;
+    UInt32Array IndexDeps;
+} ABInfos[abinfoLen] <optimize=false>;
+
+uint32 assetinfoLen;
+struct XAssetInfo {
+    Str AssetPath;
+    uint32 AssetPathHash;
+    uint32 ABIndex;
+} AssetInfos[assetinfoLen] <optimize=false>;
+
+byte EncryptedAB;
+byte HasShaderInfo;
+
+if (HasShaderInfo) {
+    struct XShaderItemInfo {
+        Str AssetPath;
+        Str SVCPath;
+        uint16 VariantCount;
+    };
+
+    struct XShaderInfo {
+        uint16 ShaderItemCount;
+        XShaderItemInfo ShaderItemInfos[ShaderItemCount] <optimize=false>;
+    } ShaderInfo;
+
+}

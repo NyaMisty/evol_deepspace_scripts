@@ -1,0 +1,24 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+uint16 len1;
+struct unk1 {
+    uint32 a;
+    uint32 b;
+} m_Map[len1];
+
+uint16 len2;
+struct unk2 {
+    uint32 a;
+    uint16 strl;
+    char str[strl];
+} m_LocaleMap[len2] <optimize=false>;

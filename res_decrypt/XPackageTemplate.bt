@@ -1,0 +1,27 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+struct Str {
+    uint16 len;
+    char val[len];
+};
+
+
+Str Encode;
+uint16 LiveDt;
+uint32 PackageFileConfId;
+uint32 PackageConfId;
+
+Str PackageExt;
+Str PackageConfExt;
+uint16 UITextPaths_Len;
+Str UITextPaths[len] <optimize=false>;

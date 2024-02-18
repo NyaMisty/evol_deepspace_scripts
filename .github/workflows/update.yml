@@ -50,18 +50,23 @@ jobs:
           ssh-private-key: |
             ${{ secrets.UPDATER_KEY }}
 
+      - name: Setup WARP
+        uses: NyaMisty/warp-on-actions@main
+        with:
+          mode: client
+          exclude_v4: true
       - name: Setup SSH (config & known-host)
         run: |
           mkdir -p $HOME/.ssh
-          curl -o /dev/null nas-school.misty.moe:3000 &
+          curl -o /dev/null nas-school6.misty.moe:3000 &
           sleep 1
-          curl -o /dev/null nas-school.misty.moe:3000 &
+          curl -o /dev/null nas-school6.misty.moe:3000 &
           sleep 2
-          curl -o /dev/null nas-school.misty.moe:3000 &
+          curl -o /dev/null nas-school6.misty.moe:3000 &
           sleep 3
-          curl -o /dev/null nas-school.misty.moe:3000
+          curl -o /dev/null nas-school6.misty.moe:3000
           # Setup needed known hosts
-          ssh-keyscan -p3022 -H nas-school.misty.moe >> $HOME/.ssh/known_hosts
+          ssh-keyscan -p3022 -H nas-school6.misty.moe >> $HOME/.ssh/known_hosts
 
       - name: Setup committer
         run: |
@@ -147,4 +152,3 @@ jobs:
         if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
         env:
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
-      

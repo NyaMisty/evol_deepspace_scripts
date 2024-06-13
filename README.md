@@ -24,3 +24,7 @@
 ## abconfig_parser
 
 解析内部存asset bundle依赖关系的工具，但我们不关心依赖关系，不需要这个工具，直接遍历所有的*.ab文件就行了
+
+## x3tb_decode
+
+解析内部存C#层msgpack配置的工具

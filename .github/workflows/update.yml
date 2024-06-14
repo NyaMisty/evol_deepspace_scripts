@@ -107,7 +107,7 @@ jobs:
       - name: Check if git changed or have new file
         id: check # output: has_update
         run: |
-          [ $(git status --porcelain=1 | wc -l) -ne 0 ] && echo "has_update=1" >> $GITHUB_OUTPUT
+          [ $(git status --porcelain=1 | wc -l) -ne 0 ] && (echo 'Got new update!'; echo "has_update=1" >> $GITHUB_OUTPUT) || echo 'No update'
         working-directory: .
       
       - name: Pull remote

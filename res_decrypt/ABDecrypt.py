@@ -32,19 +32,30 @@ def DeriveKey(codeBook):
     return ret
 
 k = DeriveKey(Utils__CalculateStringCrcHashString('95/14/fff9bd18d2edeb16aa4f62d9bc9a.ab', 16))
+#print(k.hex())
 t = bytes.fromhex('08 6A 3E 78 26 46 01 0D 50 06 5D 03 62 22 27 2E')
 d = bytes([t[i] ^ k[i % len(k)] for i in range(len(t))])
 assert d.startswith(b'UnityFS')
 
 # %%
-def DecryptBundle(bundleBasePath, bundlePath, outputFullPath):
+from Crypto.Util import strxor
+def DecryptBundle(bundleBasePath, bundlePath):
     # bundle path like: XX/XX/XXXXXXXXXXXXXXXXXX.ab
     with open(f'{bundleBasePath}/{bundlePath}', 'rb') as f:
         t = f.read()
     k = DeriveKey(Utils__CalculateStringCrcHashString(bundlePath, 16))
-    d = bytes([t[i] ^ k[i % len(k)] for i in range(len(t))])
-    with open(f'{outputFullPath}', 'wb') as f:
-        f.write(d)
+    if False:
+        #d = bytes([t[i] ^ k[i % len(k)] for i in range(len(t))])
+        d = bytes(t[i] ^ k[i % len(k)] for i in range(len(t)))
+        #d = bytes((k[i % len(k)] for i in range(len(t))))
+    else:
+        kk = k * (len(t) // len(k) + 1)
+        kk = kk[:len(t)]
+        assert len(t) == len(kk)
+        d = strxor.strxor(t, kk)
+        #assert d == bytes([t[i] ^ k[i % len(k)] for i in range(len(t))])
+    assert d.startswith(b'Unity'), f'invalid header: {d[:16].hex()}'
+    return d
 
 import os
 import sys
@@ -54,14 +65,39 @@ if False:
 else:
     BUNDLE_BASE = sys.argv[1]
     BUNDLE_DEC = sys.argv[2]
-for root, dirs, files in os.walk(BUNDLE_BASE):
-    for f in files:
-        if f.startswith('abconfig'):
-            continue
-        bundle = os.path.relpath(root, BUNDLE_BASE) + '/' + f
-        outputFullPath = BUNDLE_DEC + '/' + bundle
-        print("Decrypting", bundle)
+import zipfile
+
+outzip = BUNDLE_DEC.endswith('.zip')
+if outzip:
+    zipF = zipfile.ZipFile(BUNDLE_DEC, 'w')
+
+def fileIter():
+    for root, dirs, files in os.walk(BUNDLE_BASE):
+        for f in files:
+            if f.startswith('abconfig'):
+                continue
+            bundle = os.path.relpath(root, BUNDLE_BASE) + '/' + f
+            outputFullPath = BUNDLE_DEC + '/' + bundle
+            yield bundle, outputFullPath
+
+from multiprocessing.pool import ThreadPool
+
+p = ThreadPool(10)
+def dec(task):
+    bundle, outputFullPath = task
+    print("Decrypting", bundle)
+    buf = DecryptBundle(BUNDLE_BASE, bundle)
+    return bundle, outputFullPath, buf
+
+for bundle, outputFullPath, d in p.imap_unordered(dec, fileIter()):
+    if not outzip:
         os.makedirs(os.path.dirname(outputFullPath), exist_ok=True)
-        DecryptBundle(BUNDLE_BASE, bundle, outputFullPath)
+        with open(outputFullPath, 'wb') as f:
+            f.write(d)
+    else:
+        #print(f'Writing {bundle} size {len(d)}')
+        zipF.writestr(bundle, d)
+if outzip:
+    zipF.close()
 
 
